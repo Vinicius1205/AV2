@@ -1,28 +1,108 @@
+$usuariosFile = 'usuarios.txt';
+$perguntasFile = 'perguntas.txt';
+
+// Verifica se os arquivos existem, caso contrário, cria-os
+if (!file_exists($usuariosFile)) {
+    file_put_contents($usuariosFile, '');
+}
+
+if (!file_exists($perguntasFile)) {
+    file_put_contents($perguntasFile, '');
+}
+
+<?php
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['pergunta']) && isset($_POST['respostas'])) {
+        $pergunta = $_POST['pergunta'];
+        $respostas = $_POST['respostas'];
+        $data = $pergunta . '|' . implode('|', $respostas) . PHP_EOL;
+        file_put_contents('perguntas.txt', $data, FILE_APPEND);
+        header('Location: listar_perguntas.php');
+        exit;
+    } elseif (isset($_POST['resposta'])) {
+        $pergunta = $_POST['pergunta'];
+        $resposta = $_POST['resposta'];
+        $data = $pergunta . '|' . $resposta . PHP_EOL;
+        file_put_contents('perguntas.txt', $data, FILE_APPEND);
+        header('Location: listar_perguntas.php');
+        exit;
+    } elseif (isset($_POST['id']) && isset($_POST['pergunta']) && isset($_POST['respostas'])) {
+        $perguntaId = $_POST['id'];
+        $pergunta = $_POST['pergunta'];
+        $respostas = $_POST['respostas'];
+        $perguntas = file('perguntas.txt');
+        $perguntas[$perguntaId] = $pergunta . '|' . implode('|', $respostas) . PHP_EOL;
+        file_put_contents('perguntas.txt', implode('', $perguntas));
+        header('Location: listar_perguntas.php');
+        exit;
+    } elseif (isset($_POST['id']) && isset($_POST['pergunta']) && isset($_POST['resposta'])) {
+        $perguntaId = $_POST['id'];
+        $pergunta = $_POST['pergunta'];
+        $resposta = $_POST['resposta'];
+        $perguntas = file('perguntas.txt');
+        $perguntas[$perguntaId] = $pergunta . '|' . $resposta . PHP_EOL;
+        file_put_contents('perguntas.txt', implode('', $perguntas));
+        header('Location: listar_perguntas.php');
+        exit;
+    }
+}
+
+if (isset($_GET['id'])) {
+    $perguntaId = $_GET['id'];
+    $perguntas = file('perguntas.txt');
+    $perguntaData = explode('|', $perguntas[$perguntaId]);
+    $pergunta = $perguntaData[0];
+    $respostas = array_slice($perguntaData, 1);
+}
+
+$perguntas = file('perguntas.txt');
+?>
+
 <!DOCTYPE html>
 <html>
-	<head>
-    <title>Formulario de perguntas e respostas</title>
-	</head>
-	
-	<body>
-		<!-- fiz somente uma parte do codigo e irei terminar o resto depois pois estou com algumas dificuldades -->.
-		<h1>Formulario de perguntas e respostas</h1>
-		<form method="post" action="formulario.php">
-			<h3>Pergunta</h3>
-			<label for="pergunta1">Pergunta:</label>
-			<input type="text" name="pergunta1" id="pergunta1"><br><br>
-			<label for="resposta">Resposta:</label>
-			<input type="text" name="resposta" id="resposta"><br><br>
-			<h3>Pergunta</h3>
-			<label for="pergunta2">Multipla escolha:</label>
-			<input type="text" name="pergunta2" id="pergunta2"><br><br>
-			<label for="opcao1">Opcao 1:</label>
-			<input type="text" name="opcao1"><br><br>
-			<label for="opcao2">Opcao 2:</label>
-			<input type="text" name="opcao2"><br><br> 
-			<label for="opcao3">Opcao 3:</label>
-			<input type="text" name="opcao3"><br><br>
-			<input type="submit" value="Enviar">
-		</form>
-	</body>
+<head>
+    <title>Jogo Corporativo</title>
+</head>
+<body>
+    <h1>Cadastrar Pergunta</h1>
+    <form method="POST">
+        <label for="pergunta">Pergunta:</label>
+        <input type="text" name="pergunta" id="pergunta" required><br><br>
+        <label for="respostas">Respostas:</label><br>
+        <textarea name="respostas" id="respostas" rows="4" cols="50" required></textarea><br><br>
+        <input type="submit" value="Cadastrar">
+    </form>
+
+    <h1>Cadastrar Resposta de Texto</h1>
+    <form method="POST">
+        <label for="pergunta">Pergunta:</label>
+        <input type="text" name="pergunta" id="pergunta" required><br><br>
+        <label for="resposta">Resposta:</label><br>
+        <textarea name="resposta" id="resposta" rows="4" cols="50" required></textarea><br><br>
+        <input type="submit" value="Cadastrar">
+    </form>
+
+    <h1>Listar Perguntas</h1>
+    <table>
+        <tr>
+            <th>Pergunta</th>
+            <th>Respostas</th>
+            <th>Ações</th>
+        </tr>
+        <?php foreach ($perguntas as $id => $perguntaData) {
+            $perguntaData = explode('|', $perguntaData);
+            $pergunta = $perguntaData[0];
+            $respostas = array_slice($perguntaData, 1);
+        ?>
+        <tr>
+            <td><?php echo $pergunta; ?></td>
+            <td><?php echo implode(', ', $respostas); ?></td>
+            <td>
+                <a href="?id=<?php echo $id; ?>">Editar</a>
+                <a href="excluir_pergunta.php?id=<?php echo $id; ?>">Excluir</a>
+            </td>
+        </tr>
+        <?php } ?>
+    </table>
+</body>
 </html>
